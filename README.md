@@ -1,16 +1,19 @@
 # Encrypted file system API
 
-```
+```sh
 $ docker run -p 443:443 --name efs-engine efs-engine
+> Use `docker exec efs-engine efsctl` to perform commands.
 
-$ docker exec -ti efs-engine efsctl create-fs user-data
+$ alias efsctl="docker exec efs-engine efsctl"
+
+$ efsctl create-fs user-data
 > Creating '/efs/user-data'
 > Creating files directory '/efs/user-data/files'
 > Creating system config directory '/efs/user-data/system'
 > Creating AES key '/efs/user-data/system/aes.key'
 > Creating filename salt '/efs/user-data/system/filename-salt'
 
-$ docker exec -ti efs-engine efsctl create-user app1 --fs user-data
+$ efsctl create-user app1 --fs user-data
 Copy app1 PGP public key:
 <...>
 Pub key hash:
@@ -23,7 +26,7 @@ Use this key for TLS Client Certificate Authentication:
 > Saving user public key '/efs/user-data/system/users/app1/pub.pgp'
 ```
 
-```
+```sh
 $ docker --name efsc run -v ./keys efs-client
 
 $ docker exec -ti efsc efsc -h serverHost -u priv.pgp -c clientCert.crt
@@ -49,7 +52,7 @@ efs> stop
 shutting down container..
 ```
 
-```
+```sh
 $ efs cp ./Important-Document.pdf drive:/Documents/
 $ efs cp --sync --no-delete drive:/Documents /Users/Martin/Documents
 $ efs tar --fs drive -o /var/backups/drive.efs.tar.gz.aes -p ./password.txt
