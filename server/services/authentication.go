@@ -2,13 +2,10 @@ package services
 
 import (
 	"crypto/rand"
-	"crypto/sha256"
 	"fmt"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
-
-	uuid "github.com/satori/go.uuid"
 )
 
 type AuthenticationService interface {
@@ -23,27 +20,21 @@ func NewAuthenticationService() AuthenticationService {
 }
 
 type authenticationService struct {
-	instanceID     uuid.UUID
-	instanceSecret uuid.UUID
-	starterKey     []byte
-	basicKey       [32]byte
-	jwtKey         []byte
+	instanceID string
+	starterKey []byte
+	jwtKey     []byte
 }
 
 func (l *authenticationService) Init(ctx ctx) error {
 	var err error
 
-	l.instanceID, err = uuid.NewV4()
+	instanceID := make([]byte, 128)
+	_, err = rand.Read(instanceID)
 	if err != nil {
 		return err
 	}
+	l.instanceID = fmt.Sprintf("%x", instanceID)
 
-	l.instanceSecret, err = uuid.NewV4()
-	if err != nil {
-		return err
-	}
-
-	l.basicKey = sha256.Sum256([]byte(fmt.Sprintf("%s:%s", l.instanceID, l.instanceSecret)))
 	l.jwtKey = make([]byte, 128)
 	_, err = rand.Read(l.jwtKey)
 	if err != nil {
@@ -61,8 +52,8 @@ type MsgHelloAuthenticate struct {
 func (l *authenticationService) handleHello(clientID []byte) (MsgHelloAuthenticate, error) {
 	now := time.Now()
 	return MsgHelloAuthenticate{
-		InstanceID: l.instanceID.String(),
-		UserID:     fmt.Sprintf("%x-%x-%d", []byte(l.instanceID.String()), clientID, now.Unix()),
+		InstanceID: l.instanceID,
+		UserID:     fmt.Sprintf("%x-%x-%d", []byte(l.instanceID), clientID, now.Unix()),
 	}, nil
 }
 
