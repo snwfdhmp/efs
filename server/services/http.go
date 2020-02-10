@@ -6,6 +6,8 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
+
+	"go.uber.org/zap"
 )
 
 type ApiService interface {
@@ -23,15 +25,16 @@ func NewAPIService(ctx Ctx) ApiService {
 func (l *apiService) Listen(addr string) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		log.Info(fmt.Sprintf("%s %s", r.Method, r.URL))
 		authHeader := strings.Split(r.Header.Get("Authentication"), " ")
-		if len(authHeader) != 2 {
+		if len(authHeader) < 2 {
 			w.WriteHeader(401)
-			io.WriteString(w, "401 - Bad Authentication\n")
+			io.WriteString(w, "401 - Bad Authentication Format\n")
 			return
 		}
 		switch strings.ToLower(authHeader[0]) { //protocol
-		case "efs-handshake-hello":
-			helloCode, err := l.ctx.Auth().pgpHello([]byte(authHeader[1]))
+		case "efs-hello":
+			helloCode, err := l.ctx.Auth().handleHello([]byte(authHeader[1]))
 			if err != nil {
 				l.ctx.Log().Error(err.Error())
 				w.WriteHeader(500)
@@ -45,12 +48,32 @@ func (l *apiService) Listen(addr string) {
 				io.WriteString(w, "500 - Internal error\n")
 				return
 			}
-		case "efs-handshake-authenticate":
-			// verify code signature
-			// return jwt token
+			return
+		case "efs-authenticate":
+			jwt, err := l.ctx.Auth().handleAuthenticate([]byte(authHeader[1]), []byte(authHeader[2]))
+			if err != nil {
+				l.ctx.Log().Error(err.Error())
+				w.WriteHeader(500)
+				io.WriteString(w, "500 - Internal error\n")
+				return
+			}
+			_, err = io.WriteString(w, fmt.Sprintf("%s\n", jwt.JWTToken))
+			if err != nil {
+				l.ctx.Log().Error(err.Error())
+				w.WriteHeader(500)
+				io.WriteString(w, "500 - Internal error\n")
+				return
+			}
+			return
 		case "efs-jwt":
-			// parse jwt and verify
-			// update context accordingly
+			claims, err := l.ctx.Auth().handleJWT(authHeader[1])
+			if err != nil {
+				w.WriteHeader(401)
+				log.Error("efs-jwt:", zap.Error(err))
+				io.WriteString(w, "401 - Bad Credentials\n")
+				return
+			}
+			log.Info("Authenticated client " + claims.ClientID)
 		default:
 			w.WriteHeader(401)
 			io.WriteString(w, "401 - Bad Authentication Method\n")

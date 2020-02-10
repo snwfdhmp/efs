@@ -4,15 +4,18 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"fmt"
+	"time"
+
+	"github.com/dgrijalva/jwt-go"
 
 	uuid "github.com/satori/go.uuid"
 )
 
 type AuthenticationService interface {
 	Init(ctx) error //loads a new basic into memory and inits AuthenticationServerID
-	jwtAuth(jwtToken []byte) error
-	pgpHello(clientID []byte) (helloCode string, err error)
-	pgpAuth(clientID []byte, helloCode string) error
+	handleHello(clientID []byte) (MsgHelloAuthenticate, error)
+	handleAuthenticate(clientID []byte, password []byte) (*MsgWelcome, error)
+	handleJWT(jwtToken string) (*JWTClaims, error)
 }
 
 func NewAuthenticationService() AuthenticationService {
@@ -50,13 +53,60 @@ func (l *authenticationService) Init(ctx ctx) error {
 	return nil
 }
 
-func (l *authenticationService) jwtAuth(jwtToken []byte) error {
-	return nil
+type MsgHelloAuthenticate struct {
+	InstanceID string
+	UserID     string
 }
 
-func (l *authenticationService) pgpHello(clientID []byte) (helloCode string, err error) {
-	return "testcode", nil
+func (l *authenticationService) handleHello(clientID []byte) (MsgHelloAuthenticate, error) {
+	now := time.Now()
+	return MsgHelloAuthenticate{
+		InstanceID: l.instanceID.String(),
+		UserID:     fmt.Sprintf("%x-%x-%d", []byte(l.instanceID.String()), clientID, now.Unix()),
+	}, nil
 }
-func (l *authenticationService) pgpAuth(clientID []byte, helloCode string) error {
-	return nil
+
+type MsgWelcome struct {
+	JWTToken string
+}
+
+type JWTClaims struct {
+	ClientID   string `json:"client_id"`
+	Expiration int    `json:"exp"`
+	jwt.StandardClaims
+}
+
+func (l *authenticationService) handleAuthenticate(clientID []byte, password []byte) (*MsgWelcome, error) {
+	if string(password) != "dev" {
+		return nil, fmt.Errorf("dev mode enabled. log in with password 'dev'")
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"client_id": string(clientID),
+		"exp":       time.Now().Add(time.Minute * 30).Unix(),
+	})
+	tokenString, err := token.SignedString(l.jwtKey)
+	if err != nil {
+		return nil, err
+	}
+	return &MsgWelcome{
+		JWTToken: tokenString,
+	}, nil
+}
+
+func (l *authenticationService) handleJWT(jwtToken string) (*JWTClaims, error) {
+	claims := JWTClaims{}
+	token, err := jwt.ParseWithClaims(jwtToken, &claims, func(token *jwt.Token) (interface{}, error) {
+		return l.jwtKey, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	if claims, ok := token.Claims.(*JWTClaims); ok && token.Valid {
+		fmt.Printf("%v", claims.StandardClaims.ExpiresAt)
+	} else {
+		fmt.Println(err)
+	}
+
+	return &claims, nil
 }

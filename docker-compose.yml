@@ -1,0 +1,11 @@
+version: '3'
+services:
+  web:
+    image: nginx
+  efs:
+    image: snwfdhmp1/efs-server:beta
+    ports:
+    - "8081:8081"
+    volumes:
+      - ./example/efs:/efs
+      - ./example/efs:/efs
