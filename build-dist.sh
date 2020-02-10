@@ -1,3 +1,4 @@
 mkdir -p dist
-go get ./server/cmd/efsctl/...
-go build -o dist/efsctl ./server/cmd/efsctl
+cd ./server
+go get ./cmd/efsctl/...
+go build -o ../dist/efsctl ./cmd/efsctl
