@@ -2,7 +2,7 @@ image: golang:latest
 
 variables:
   # Please edit to your GitLab project
-  REPO_NAME: gitlab.com/snwfdhmp/efs
+  REPO_NAME: gitlab.ordoclic.fr/martin/efs
 
 # The problem is that to be able to use go get, one needs to put
 # the repository in the $GOPATH. So for example if your gitlab domain
