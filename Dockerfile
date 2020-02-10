@@ -1,10 +1,12 @@
 FROM golang:1.13.7-alpine3.11 as builder
+ENV GO111MODULE=on
 
 RUN apk update && apk add git
 
 WORKDIR /go/src/github.com/snwfdhmp/efs
 
 COPY ./server ./server
+
 
 RUN go get ./...
 RUN go build -o ./server ./server/cmd/server
