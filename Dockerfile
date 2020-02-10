@@ -5,7 +5,6 @@ RUN apk update && apk add git
 WORKDIR /go/src/github.com/snwfdhmp/efs
 
 COPY ./server ./server
-COPY ./models ./models
 
 RUN go get ./...
 RUN go build -o ./server ./server/cmd/server
