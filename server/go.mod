@@ -1,4 +1,4 @@
-module github.com/snwfdhmp/efs
+module github.com/snwfdhmp/efs/server
 
 go 1.13
 

@@ -5,10 +5,10 @@ RUN apk update && apk add git
 
 WORKDIR /go/src/github.com/snwfdhmp/efs
 
+RUN go get ./...
+
 COPY ./server ./server
 
-
-RUN go get ./...
 RUN go build -o ./server ./server/cmd/server
 
 FROM alpine:3.11
