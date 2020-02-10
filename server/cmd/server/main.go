@@ -18,12 +18,12 @@ func init() {
 }
 
 func main() {
-	ctx, err := services.NewCtx(log, path)
+	ctx, err := services.NewCtx(log, *path)
 	if err != nil {
 		log.Fatal("could not start server", zap.Error(err))
 		return
 	}
 
-	log.Info("Starting API. Listening on " + serverPort + ".")
-	ctx.API().Listen("0.0.0.0:" + serverPort)
+	log.Info("Starting API. Listening on " + *serverPort + ".")
+	ctx.API().Listen("0.0.0.0:" + *serverPort)
 }
