@@ -1,5 +1,15 @@
 # Encrypted file system API
 
+## Features
+
+- Files are encrypted using AES-256
+- Clients use the filesystem from a HTTP API
+- Clients are authenticated from a password or ed25519 handshake
+- Communications are encrypted using SSL/TLS
+- The API can store decrypted files in an internal cache to boost the read API speed.
+- Using Docker is highly recommended, but EFS server and clients work like standard binaries as well.
+- Combination of multiple encryption stages with different keys stored in different places. It provides better security against key stealing.
+
 ```sh
 $ docker run -p 443:443 --name efs-engine efs-engine
 > Use `docker exec efs-engine efsctl` to perform commands.
