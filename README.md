@@ -1,20 +1,55 @@
-# Encrypted file system API
+# Encrypted File System
 
 ## Features
 
-- Files are encrypted using AES-256
-- Clients use the filesystem from a HTTP API
-- Clients are authenticated from a password or ed25519 handshake
-- Communications are encrypted using SSL/TLS
+- Files are encrypted using AES-256.
+- HTTPs API authenticated by ED25519 handshake (using NaCl library).
+- Communications are encrypted using SSL/TLS.
+- File architecture (paths and names) is obsfucated
 - The API can store decrypted files in an internal cache to boost the read API speed.
 - Using Docker is highly recommended, but EFS server and clients work like standard binaries as well.
-- Combination of multiple encryption stages with different keys stored in different places. It provides better security against key stealing.
+- Combination of multiple encryption stages with keys stored in various places. Provides better security against key stealing.
+
+## Authentication protocol
+
+**Simple explanation**
+
+|Server|Client|
+|---|---|
+||Hello, I'm user A|
+|Hello user A, use this Nonce for authentication||
+||Here is the signed Nonce|
+|Here is your JWT token||
+
+**Complete explanation**
+
+- Client sends username to Server.
+- Server generates a Nonce and remembers what username it is related to. It sends back the Nonce to Client.
+- Client generate encrypts the Nonce with its ED25519 key and sends it to the Server along with its username.
+- Server verifies that the encrypted Nonce is signed by the user who wants to authenticate. It sends back a JWT token as session.
+
+## Get started
+
+### Start the server
+
+With docker, simply run :
 
 ```sh
-$ docker run -p 443:443 --name efs-engine efs-engine
-> Use `docker exec efs-engine efsctl` to perform commands.
+$ docker run -d \
+--name efs-server \
+-v ./efs:/efs
+snwfdhmp1/efs-server:latest
+```
 
-$ alias efsctl="docker exec efs-engine efsctl"
+## Example usage
+
+**Server side**
+
+```sh
+$ docker run -p 443:443 --name efs-server efs-server
+> Use `docker exec efs-server efsctl` to perform commands.
+
+$ alias efsctl="docker exec efs-server efsctl"
 
 $ efsctl create-fs user-data
 > Creating '/efs/user-data'
@@ -35,6 +70,8 @@ Use this key for TLS Client Certificate Authentication:
 > Creating user '/efs/user-data/system/users/app1'
 > Saving user public key '/efs/user-data/system/users/app1/pub.pgp'
 ```
+
+**Client side**
 
 ```sh
 $ docker --name efsc run -v ./keys efs-client
@@ -68,8 +105,12 @@ $ efs cp --sync --no-delete drive:/Documents /Users/Martin/Documents
 $ efs tar --fs drive -o /var/backups/drive.efs.tar.gz.aes -p ./password.txt
 ```
 
-POST /data/patients/173/prescription.pdf
-GET /data/...
+## API Description 
+
+- POST /data/patients/173/prescription.pdf : Create/update a file
+- GET /data/... : Read a file
+
+## Developer notes (in french) (@todo remove section)
 
 Fonctionnement
 
@@ -91,6 +132,3 @@ Quand il y a des opérations à éxécuter sur le fs, le FS lance une sauvegarde
 ex: 65535 > 65535
     3f12/
         de0f
-        
-
-
