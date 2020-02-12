@@ -38,6 +38,8 @@ Users are authenticated using a Ed25519 handshake. Once authenticated they recei
 
 ## Get started
 
+> EFS is currently a Work In Progress. Please DO NOT USE IN PRODUCTION and do not plan on using it for production before 2nd semester of 2020.
+
 ### Start the server
 
 With docker, simply run :
