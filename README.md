@@ -16,6 +16,11 @@ Made for sensitive file storing (ex: Medical Data in Europe).
 - Using Docker is highly recommended, but EFS server and clients work like standard binaries as well.
 - Combination of multiple encryption stages with keys stored in various places. Provides better security against key stealing.
 
+## API Overview 
+
+- Create/update a file : `POST /patients/173/prescription.pdf`
+- Read a file : `GET /patients/173/prescription.pdf`
+
 ## Authentication protocol
 
 Users are authenticated using a Ed25519 handshake. Once authenticated they receive a JWT Token that represents their session and allow them to perform requests. The process is described below.
@@ -57,16 +62,16 @@ snwfdhmp1/efs-server:latest
 
 ```sh
 $ docker run -p 443:443 --name efs-server efs-server
-> Use `docker exec efs-server efsctl` to perform commands.
+Use `docker exec efs-server efsctl` to perform commands.
 
 $ alias efsctl="docker exec efs-server efsctl"
 
 $ efsctl create-fs user-data
-> Creating '/efs/user-data'
-> Creating files directory '/efs/user-data/files'
-> Creating system config directory '/efs/user-data/system'
-> Creating AES key '/efs/user-data/system/aes.key'
-> Creating filename salt '/efs/user-data/system/filename-salt'
+Creating '/efs/user-data'
+Creating files directory '/efs/user-data/files'
+Creating system config directory '/efs/user-data/system'
+Creating AES key '/efs/user-data/system/aes.key'
+Creating filename salt '/efs/user-data/system/filename-salt'
 
 $ efsctl create-user app1 --fs user-data
 Copy app1 PGP public key:
@@ -114,11 +119,6 @@ $ efs cp ./Important-Document.pdf drive:/Documents/
 $ efs cp --sync --no-delete drive:/Documents /Users/Martin/Documents
 $ efs tar --fs drive -o /var/backups/drive.efs.tar.gz.aes -p ./password.txt
 ```
-
-## API Description 
-
-- POST /data/patients/173/prescription.pdf : Create/update a file
-- GET /data/... : Read a file
 
 ## Developer notes (in french) (@todo remove section)
 
