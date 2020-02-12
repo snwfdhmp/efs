@@ -11,7 +11,7 @@ Made for sensitive file storing (ex: Medical Data in Europe).
 - Files are encrypted using AES-256.
 - HTTPS API authenticated using ED25519 handshake (using NaCl library).
 - Communications are encrypted using SSL/TLS.
-- File architecture (paths and names) is obsfucated
+- File architecture (paths and names) is obfuscated
 - The API can store decrypted files in an internal cache to boost the read API speed.
 - Using Docker is highly recommended, but EFS server and clients work like standard binaries as well.
 - Combination of multiple encryption stages with keys stored in various places. Provides better security against key stealing.
