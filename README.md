@@ -1,9 +1,15 @@
-# Encrypted File System
+# Encrypted File System over HTTPS
+
+EFS is an encrypted file system accessible via HTTP API.
+
+Files are encrypted using AES-256, users are authenticated using a Ed25519 HMAC handshake.
+
+Made for sensitive file storing (ex: Medical Data in Europe).
 
 ## Features
 
 - Files are encrypted using AES-256.
-- HTTPs API authenticated by ED25519 handshake (using NaCl library).
+- HTTPS API authenticated using ED25519 handshake (using NaCl library).
 - Communications are encrypted using SSL/TLS.
 - File architecture (paths and names) is obsfucated
 - The API can store decrypted files in an internal cache to boost the read API speed.
@@ -11,6 +17,8 @@
 - Combination of multiple encryption stages with keys stored in various places. Provides better security against key stealing.
 
 ## Authentication protocol
+
+Users are authenticated using a Ed25519 handshake. Once authenticated they receive a JWT Token that represents their session and allow them to perform requests. The process is described below.
 
 **Simple explanation**
 
