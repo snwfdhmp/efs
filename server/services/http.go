@@ -27,30 +27,43 @@ func (l *apiService) Listen(addr string) {
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		log.Info(fmt.Sprintf("%s %s", r.Method, r.URL))
 		authHeader := strings.Split(r.Header.Get("Authentication"), " ")
-		if len(authHeader) < 2 {
+		if len(authHeader) < 1 {
 			w.WriteHeader(401)
 			io.WriteString(w, "401 - Bad Authentication Format\n")
 			return
 		}
 		switch strings.ToLower(authHeader[0]) { //protocol
-		case "efs-hello":
-			helloCode, err := l.ctx.Auth().handleHello([]byte(authHeader[1]))
-			if err != nil {
-				l.ctx.Log().Error(err.Error())
-				w.WriteHeader(500)
-				io.WriteString(w, "500 - Internal error\n")
-				return
-			}
-			_, err = io.WriteString(w, fmt.Sprintf("%s\n", helloCode))
-			if err != nil {
-				l.ctx.Log().Error(err.Error())
-				w.WriteHeader(500)
-				io.WriteString(w, "500 - Internal error\n")
-				return
-			}
-			return
+		// case "efs-hello":
+		// 	helloCode, err := l.ctx.Auth().handleHello(authHeader[1])
+		// 	if err != nil {
+		// 		l.ctx.Log().Error(err.Error())
+		// 		w.WriteHeader(500)
+		// 		io.WriteString(w, "500 - Internal error\n")
+		// 		return
+		// 	}
+		// 	_, err = io.WriteString(w, fmt.Sprintf("%s\n", helloCode))
+		// 	if err != nil {
+		// 		l.ctx.Log().Error(err.Error())
+		// 		w.WriteHeader(500)
+		// 		io.WriteString(w, "500 - Internal error\n")
+		// 		return
+		// 	}
+		// 	return
 		case "efs-authenticate":
-			jwt, err := l.ctx.Auth().handleAuthenticate([]byte(authHeader[1]), []byte(authHeader[2]))
+			body, err := ioutil.ReadAll(r.Body)
+			if err != nil {
+				l.ctx.Log().Error(err.Error())
+				w.WriteHeader(500)
+				io.WriteString(w, "500 - Internal error\n")
+				return
+			}
+			bodyAuth := strings.Split(string(body), " ")
+			if len(bodyAuth) != 2 {
+				w.WriteHeader(401)
+				io.WriteString(w, "401 - Check Authentication Protocol\n")
+				return
+			}
+			jwt, err := l.ctx.Auth().handleAuthenticate(bodyAuth[1], bodyAuth[2])
 			if err != nil {
 				l.ctx.Log().Error(err.Error())
 				w.WriteHeader(500)

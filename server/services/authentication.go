@@ -8,15 +8,20 @@ import (
 	"github.com/dgrijalva/jwt-go"
 )
 
+var (
+	starterKey = "AEFDAEFDAEFDAEFD"
+)
+
 type AuthenticationService interface {
 	Init(ctx) error //loads a new basic into memory and inits AuthenticationServerID
-	handleHello(clientID []byte) (MsgHelloAuthenticate, error)
-	handleAuthenticate(clientID []byte, password []byte) (*MsgWelcome, error)
+	handleAuthenticate(clientID string, password string) (*MsgWelcome, error)
 	handleJWT(jwtToken string) (*JWTClaims, error)
 }
 
 func NewAuthenticationService() AuthenticationService {
-	return &authenticationService{}
+	return &authenticationService{
+		starterKey: []byte(starterKey),
+	}
 }
 
 type authenticationService struct {
@@ -67,13 +72,13 @@ type JWTClaims struct {
 	jwt.StandardClaims
 }
 
-func (l *authenticationService) handleAuthenticate(clientID []byte, password []byte) (*MsgWelcome, error) {
-	if string(password) != "dev" {
+func (l *authenticationService) handleAuthenticate(clientID string, password string) (*MsgWelcome, error) {
+	if password != "dev" {
 		return nil, fmt.Errorf("dev mode enabled. log in with password 'dev'")
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"client_id": string(clientID),
+		"client_id": clientID,
 		"exp":       time.Now().Add(time.Minute * 30).Unix(),
 	})
 	tokenString, err := token.SignedString(l.jwtKey)
